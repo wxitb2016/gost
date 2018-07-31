@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-log/log"
+	"github.com/phuslu/glog"
 	quic "github.com/lucas-clemente/quic-go"
 )
 
@@ -58,7 +58,6 @@ func (tr *quicTransporter) Dial(addr string, options ...DialOption) (conn net.Co
 	for _, option := range options {
 		option(opts)
 	}
-
 	tr.sessionMutex.Lock()
 	defer tr.sessionMutex.Unlock()
 
@@ -149,7 +148,7 @@ func (tr *quicTransporter) initSession(addr string, conn net.Conn, config *QUICC
 	}
 	session, err := quic.Dial(udpConn, udpAddr, addr, config.TLSConfig, quicConfig)
 	if err != nil {
-		log.Logf("quic dial %s: %v", addr, err)
+		glog.Infof("quic dial %s: %v", addr, err)
 		return nil, err
 	}
 	return &quicSession{conn: conn, session: session}, nil
@@ -225,7 +224,7 @@ func (l *quicListener) listenLoop() {
 	for {
 		session, err := l.ln.Accept()
 		if err != nil {
-			log.Log("[quic] accept:", err)
+			glog.Info("[quic] accept:", err)
 			l.errChan <- err
 			close(l.errChan)
 			return
@@ -235,13 +234,13 @@ func (l *quicListener) listenLoop() {
 }
 
 func (l *quicListener) sessionLoop(session quic.Session) {
-	log.Logf("[quic] %s <-> %s", session.RemoteAddr(), session.LocalAddr())
-	defer log.Logf("[quic] %s >-< %s", session.RemoteAddr(), session.LocalAddr())
+	glog.Infof("[quic] %s <-> %s", session.RemoteAddr(), session.LocalAddr())
+	defer glog.Infof("[quic] %s >-< %s", session.RemoteAddr(), session.LocalAddr())
 
 	for {
 		stream, err := session.AcceptStream()
 		if err != nil {
-			log.Log("[quic] accept stream:", err)
+			glog.Info("[quic] accept stream:", err)
 			session.Close()
 			return
 		}
@@ -251,7 +250,7 @@ func (l *quicListener) sessionLoop(session quic.Session) {
 		case l.connChan <- cc:
 		default:
 			cc.Close()
-			log.Logf("[quic] %s - %s: connection queue is full", session.RemoteAddr(), session.LocalAddr())
+			glog.Infof("[quic] %s - %s: connection queue is full", session.RemoteAddr(), session.LocalAddr())
 		}
 	}
 }

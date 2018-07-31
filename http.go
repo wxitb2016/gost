@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-log/log"
+	"github.com/phuslu/glog"
 )
 
 type httpConnector struct {
@@ -74,7 +74,7 @@ func (c *httpConnector) Connect(conn net.Conn, addr string, options ...ConnectOp
 
 	if Debug {
 		dump, _ := httputil.DumpRequest(req, false)
-		log.Log(string(dump))
+		glog.Info(string(dump))
 	}
 
 	resp, err := http.ReadResponse(bufio.NewReader(conn), req)
@@ -84,7 +84,7 @@ func (c *httpConnector) Connect(conn net.Conn, addr string, options ...ConnectOp
 
 	if Debug {
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Log(string(dump))
+		glog.Info(string(dump))
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -119,7 +119,7 @@ func (h *httpHandler) Handle(conn net.Conn) {
 
 	req, err := http.ReadRequest(bufio.NewReader(conn))
 	if err != nil {
-		log.Logf("[http] %s - %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		glog.Infof("[http] %s - %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 		return
 	}
 	defer req.Body.Close()
@@ -148,12 +148,12 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	if u != "" {
 		u += "@"
 	}
-	log.Logf("[http] %s%s -> %s -> %s",
+	glog.Infof("[http] %s%s -> %s -> %s",
 		u, conn.RemoteAddr(), h.options.Node.String(), host)
 
 	if Debug {
 		dump, _ := httputil.DumpRequest(req, false)
-		log.Logf("[http] %s -> %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
+		glog.Infof("[http] %s -> %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 	}
 
 	req.Header.Del("Gost-Target")
@@ -166,13 +166,13 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	resp.Header.Add("Proxy-Agent", "gost/"+Version)
 
 	if !Can("tcp", host, h.options.Whitelist, h.options.Blacklist) {
-		log.Logf("[http] %s - %s : Unauthorized to tcp connect to %s",
+		glog.Infof("[http] %s - %s : Unauthorized to tcp connect to %s",
 			conn.RemoteAddr(), conn.LocalAddr(), host)
 		resp.StatusCode = http.StatusForbidden
 
 		if Debug {
 			dump, _ := httputil.DumpResponse(resp, false)
-			log.Logf("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
+			glog.Infof("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 		}
 
 		resp.Write(conn)
@@ -182,11 +182,11 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	if h.options.Bypass.Contains(host) {
 		resp.StatusCode = http.StatusForbidden
 
-		log.Logf("[http] %s - %s bypass %s",
+		glog.Infof("[http] %s - %s bypass %s",
 			conn.RemoteAddr(), conn.LocalAddr(), host)
 		if Debug {
 			dump, _ := httputil.DumpResponse(resp, false)
-			log.Logf("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
+			glog.Infof("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 		}
 
 		resp.Write(conn)
@@ -202,7 +202,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 
 		if Debug {
 			dump, _ := httputil.DumpResponse(resp, false)
-			log.Logf("[http] %s <- %s\n%s",
+			glog.Infof("[http] %s <- %s\n%s",
 				conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 		}
 
@@ -226,7 +226,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 	for i := 0; i < retries; i++ {
 		route, err = h.options.Chain.selectRouteFor(host)
 		if err != nil {
-			log.Logf("[http] %s -> %s : %s",
+			glog.Infof("[http] %s -> %s : %s",
 				conn.RemoteAddr(), conn.LocalAddr(), err)
 			continue
 		}
@@ -247,7 +247,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 			if err == nil {
 				return
 			}
-			log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+			glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			continue
 		}
 
@@ -259,7 +259,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 		if err == nil {
 			break
 		}
-		log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 	}
 
 	if err != nil {
@@ -267,7 +267,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 
 		if Debug {
 			dump, _ := httputil.DumpResponse(resp, false)
-			log.Logf("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
+			glog.Infof("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 		}
 
 		resp.Write(conn)
@@ -279,27 +279,27 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 		b := []byte("HTTP/1.1 200 Connection established\r\n" +
 			"Proxy-Agent: gost/" + Version + "\r\n\r\n")
 		if Debug {
-			log.Logf("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(b))
+			glog.Infof("[http] %s <- %s\n%s", conn.RemoteAddr(), conn.LocalAddr(), string(b))
 		}
 		conn.Write(b)
 	} else {
 		req.Header.Del("Proxy-Connection")
 
 		if err = req.Write(cc); err != nil {
-			log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+			glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 			return
 		}
 	}
 
-	log.Logf("[http] %s <-> %s", conn.RemoteAddr(), host)
+	glog.Infof("[http] %s <-> %s", conn.RemoteAddr(), host)
 	transport(conn, cc)
-	log.Logf("[http] %s >-< %s", conn.RemoteAddr(), host)
+	glog.Infof("[http] %s >-< %s", conn.RemoteAddr(), host)
 }
 
 func (h *httpHandler) authenticate(conn net.Conn, req *http.Request, resp *http.Response) (ok bool) {
 	u, p, _ := basicProxyAuth(req.Header.Get("Proxy-Authorization"))
 	if Debug && (u != "" || p != "") {
-		log.Logf("[http] %s -> %s : Authorization '%s' '%s'",
+		glog.Infof("[http] %s -> %s : Authorization '%s' '%s'",
 			conn.RemoteAddr(), conn.LocalAddr(), u, p)
 	}
 	if h.options.Authenticator == nil || h.options.Authenticator.Authenticate(u, p) {
@@ -328,10 +328,10 @@ func (h *httpHandler) authenticate(conn net.Conn, req *http.Request, resp *http.
 				defer cc.Close()
 
 				req.Write(cc)
-				log.Logf("[http] %s <-> %s : forward to %s",
+				glog.Infof("[http] %s <-> %s : forward to %s",
 					conn.RemoteAddr(), conn.LocalAddr(), ss[1])
 				transport(conn, cc)
-				log.Logf("[http] %s >-< %s : forward to %s",
+				glog.Infof("[http] %s >-< %s : forward to %s",
 					conn.RemoteAddr(), conn.LocalAddr(), ss[1])
 				return
 			}
@@ -349,7 +349,7 @@ func (h *httpHandler) authenticate(conn net.Conn, req *http.Request, resp *http.
 	}
 
 	if resp.StatusCode == 0 {
-		log.Logf("[http] %s <- %s : proxy authentication required",
+		glog.Infof("[http] %s <- %s : proxy authentication required",
 			conn.RemoteAddr(), conn.LocalAddr())
 		resp.StatusCode = http.StatusProxyAuthRequired
 		resp.Header.Add("Proxy-Authenticate", "Basic realm=\"gost\"")
@@ -364,7 +364,7 @@ func (h *httpHandler) authenticate(conn net.Conn, req *http.Request, resp *http.
 
 	if Debug {
 		dump, _ := httputil.DumpResponse(resp, false)
-		log.Logf("[http] %s <- %s\n%s",
+		glog.Infof("[http] %s <- %s\n%s",
 			conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 	}
 
@@ -398,14 +398,14 @@ func (h *httpHandler) forwardRequest(conn net.Conn, req *http.Request, route *Ch
 		req.URL.Scheme = "http" // make sure that the URL is absolute
 	}
 	if err = req.WriteProxy(cc); err != nil {
-		log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+		glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 		return nil
 	}
 	cc.SetWriteDeadline(time.Time{})
 
-	log.Logf("[http] %s <-> %s", conn.RemoteAddr(), req.Host)
+	glog.Infof("[http] %s <-> %s", conn.RemoteAddr(), req.Host)
 	transport(conn, cc)
-	log.Logf("[http] %s >-< %s", conn.RemoteAddr(), req.Host)
+	glog.Infof("[http] %s >-< %s", conn.RemoteAddr(), req.Host)
 	return nil
 }
 
