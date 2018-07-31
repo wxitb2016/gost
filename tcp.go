@@ -1,6 +1,9 @@
 package gost
 
-import "net"
+import (
+	"net"
+	"os"
+)
 
 // tcpTransporter is a raw TCP transporter.
 type tcpTransporter struct{}
@@ -43,6 +46,14 @@ func TCPListener(addr string) (Listener, error) {
 	laddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
+	}
+	// Set QUIC_CONNID_PORT if not set
+	if _, ok := os.LookupEnv("QUIC_CONNID_PORT"); !ok {
+		err = os.Setenv("QUIC_CONNID_PORT", strconv.Itoa(laddr.Port))
+		glog.Infof("Setting QUIC_CONNID_PORT to %v", laddr.Port)
+		if err != nil {
+			return nil, err
+		}
 	}
 	ln, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
