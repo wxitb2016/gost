@@ -152,7 +152,7 @@ var (
 	}
 )
 
-func transport(rw1, rw2 io.ReadWriter) error {
+func transport_deadlock_bug(rw1, rw2 io.ReadWriter) error {
 	errc := make(chan error, 1)
 	go func() {
 		buf := trPool.Get().([]byte)
@@ -175,4 +175,9 @@ func transport(rw1, rw2 io.ReadWriter) error {
 		err = nil
 	}
 	return err
+}
+
+func transport(rw1, rw2 io.ReadWriter) error {
+	CopyTwoStreams(rw1, rw2)
+	return nil
 }
