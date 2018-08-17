@@ -100,6 +100,6 @@ func CopyTwoStreams(a, b io.ReadWriter) {
 	ended := false
 	die := make(chan int)
 	go IOCopyDebug(a, b, false, &ended, die)
-	IOCopyDebug(b, a, true, &ended, die)
+	go IOCopyDebug(b, a, true, &ended, die)
 	<-die
 }
