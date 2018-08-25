@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"flag"
 	"net/http"
+	"strings"
 	// "strconv"
 	_ "net/http/pprof"
 
@@ -24,7 +26,13 @@ func init() {
 			glog.Infof("mutex pprof enabled")
 			runtime.SetMutexProfileFraction(1)
 		}
-		pprofAddr := fmt.Sprintf("localhost:%s", port)
+		var addr string
+		if !strings.Contains(port, ":") {
+			addr = fmt.Sprintf("localhost:%s", port)
+		} else {
+			addr = port
+		}
+		pprofAddr := addr
 		glog.Infof("pprof listening on http://%v", pprofAddr)
 		go http.ListenAndServe(pprofAddr, nil)
 	}
@@ -37,4 +45,18 @@ func init() {
 	// 		go manhole.ListenAndServe(intPort)
 	// 	}
 	// }
+
+	glogFlagShim(map[string]string{
+		"v":                "3",
+		"logtostderr":      "true",
+	})
+}
+
+// Copied from https://github.com/urfave/cli/issues/269#issuecomment-255516642
+func glogFlagShim(fakeVals map[string]string) {
+	flag.VisitAll(func(fl *flag.Flag) {
+		if val, ok := fakeVals[fl.Name]; ok {
+			fl.Value.Set(val)
+		}
+	})
 }
