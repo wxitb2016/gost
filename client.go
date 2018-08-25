@@ -122,8 +122,6 @@ type HandshakeOptions struct {
 	Interval   time.Duration
 	Retry      int
 	TLSConfig  *tls.Config
-	WSOptions  *WSOptions
-	KCPConfig  *KCPConfig
 	QUICConfig *QUICConfig
 }
 
@@ -176,20 +174,6 @@ func RetryHandshakeOption(retry int) HandshakeOption {
 func TLSConfigHandshakeOption(config *tls.Config) HandshakeOption {
 	return func(opts *HandshakeOptions) {
 		opts.TLSConfig = config
-	}
-}
-
-// WSOptionsHandshakeOption specifies the websocket options used by websocket handshake
-func WSOptionsHandshakeOption(options *WSOptions) HandshakeOption {
-	return func(opts *HandshakeOptions) {
-		opts.WSOptions = options
-	}
-}
-
-// KCPConfigHandshakeOption specifies the KCP config used by KCP handshake
-func KCPConfigHandshakeOption(config *KCPConfig) HandshakeOption {
-	return func(opts *HandshakeOptions) {
-		opts.KCPConfig = config
 	}
 }
 

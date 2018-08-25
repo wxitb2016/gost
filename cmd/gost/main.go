@@ -195,38 +195,9 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		InsecureSkipVerify: !node.GetBool("secure"),
 		RootCAs:            rootCAs,
 	}
-	wsOpts := &gost.WSOptions{}
-	wsOpts.EnableCompression = node.GetBool("compression")
-	wsOpts.ReadBufferSize = node.GetInt("rbuf")
-	wsOpts.WriteBufferSize = node.GetInt("wbuf")
-	wsOpts.UserAgent = node.Get("agent")
 
 	var tr gost.Transporter
 	switch node.Transport {
-	case "tls":
-		tr = gost.TLSTransporter()
-	case "mtls":
-		tr = gost.MTLSTransporter()
-	case "ws":
-		tr = gost.WSTransporter(wsOpts)
-	case "mws":
-		tr = gost.MWSTransporter(wsOpts)
-	case "wss":
-		tr = gost.WSSTransporter(wsOpts)
-	case "mwss":
-		tr = gost.MWSSTransporter(wsOpts)
-	case "kcp":
-		config, err := parseKCPConfig(node.Get("c"))
-		if err != nil {
-			return nil, err
-		}
-		tr = gost.KCPTransporter(config)
-	case "ssh":
-		if node.Protocol == "direct" || node.Protocol == "remote" {
-			tr = gost.SSHForwardTransporter()
-		} else {
-			tr = gost.SSHTunnelTransporter()
-		}
 	case "quic":
 		config := &gost.QUICConfig{
 			TLSConfig:   tlsCfg,
@@ -241,41 +212,21 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		}
 
 		tr = gost.QUICTransporter(config)
-	case "http2":
-		tr = gost.HTTP2Transporter(tlsCfg)
-	case "h2":
-		tr = gost.H2Transporter(tlsCfg)
-	case "h2c":
-		tr = gost.H2CTransporter()
 
-	case "obfs4":
-		tr = gost.Obfs4Transporter()
-	case "ohttp":
-		tr = gost.ObfsHTTPTransporter()
 	default:
 		tr = gost.TCPTransporter()
 	}
 
 	var connector gost.Connector
 	switch node.Protocol {
-	case "http2":
-		connector = gost.HTTP2Connector(node.User)
 	case "socks", "socks5":
 		connector = gost.SOCKS5Connector(node.User)
 	case "socks4":
 		connector = gost.SOCKS4Connector()
 	case "socks4a":
 		connector = gost.SOCKS4AConnector()
-	case "ss":
-		connector = gost.ShadowConnector(node.User)
-	case "direct":
-		connector = gost.SSHDirectForwardConnector()
-	case "remote":
-		connector = gost.SSHRemoteForwardConnector()
 	case "forward":
 		connector = gost.ForwardConnector()
-	case "sni":
-		connector = gost.SNIConnector(node.Get("host"))
 	case "http":
 		fallthrough
 	default:
@@ -292,7 +243,6 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		gost.AddrHandshakeOption(node.Addr),
 		gost.HostHandshakeOption(node.Host),
 		gost.UserHandshakeOption(node.User),
-		gost.TLSConfigHandshakeOption(tlsCfg),
 		gost.IntervalHandshakeOption(time.Duration(node.GetInt("ping")) * time.Second),
 		gost.TimeoutHandshakeOption(time.Duration(timeout) * time.Second),
 		gost.RetryHandshakeOption(node.GetInt("retry")),
@@ -317,13 +267,6 @@ func parseChainNode(ns string) (nodes []gost.Node, err error) {
 		nodes = []gost.Node{node}
 	}
 
-	if node.Transport == "obfs4" {
-		for i := range nodes {
-			if err := gost.Obfs4Init(nodes[i], false); err != nil {
-				return nil, err
-			}
-		}
-	}
 
 	return
 }
@@ -352,42 +295,8 @@ func (r *route) serve() error {
 			return err
 		}
 
-		wsOpts := &gost.WSOptions{}
-		wsOpts.EnableCompression = node.GetBool("compression")
-		wsOpts.ReadBufferSize = node.GetInt("rbuf")
-		wsOpts.WriteBufferSize = node.GetInt("wbuf")
-
 		var ln gost.Listener
 		switch node.Transport {
-		case "tls":
-			ln, err = gost.TLSListener(node.Addr, tlsCfg)
-		case "mtls":
-			ln, err = gost.MTLSListener(node.Addr, tlsCfg)
-		case "ws":
-			wsOpts.WriteBufferSize = node.GetInt("wbuf")
-			ln, err = gost.WSListener(node.Addr, wsOpts)
-		case "mws":
-			ln, err = gost.MWSListener(node.Addr, wsOpts)
-		case "wss":
-			ln, err = gost.WSSListener(node.Addr, tlsCfg, wsOpts)
-		case "mwss":
-			ln, err = gost.MWSSListener(node.Addr, tlsCfg, wsOpts)
-		case "kcp":
-			config, er := parseKCPConfig(node.Get("c"))
-			if er != nil {
-				return er
-			}
-			ln, err = gost.KCPListener(node.Addr, config)
-		case "ssh":
-			config := &gost.SSHConfig{
-				Users:     users,
-				TLSConfig: tlsCfg,
-			}
-			if node.Protocol == "forward" {
-				ln, err = gost.TCPListener(node.Addr)
-			} else {
-				ln, err = gost.SSHTunnelListener(node.Addr, config)
-			}
 		case "quic":
 			config := &gost.QUICConfig{
 				TLSConfig:   tlsCfg,
@@ -401,39 +310,14 @@ func (r *route) serve() error {
 			}
 
 			ln, err = gost.QUICListener(node.Addr, config)
-		case "http2":
-			ln, err = gost.HTTP2Listener(node.Addr, tlsCfg)
-		case "h2":
-			ln, err = gost.H2Listener(node.Addr, tlsCfg)
-		case "h2c":
-			ln, err = gost.H2CListener(node.Addr)
 		case "tcp":
-			// Directly use SSH port forwarding if the last chain node is forward+ssh
-			if chain.LastNode().Protocol == "forward" && chain.LastNode().Transport == "ssh" {
-				chain.Nodes()[len(chain.Nodes())-1].Client.Connector = gost.SSHDirectForwardConnector()
-				chain.Nodes()[len(chain.Nodes())-1].Client.Transporter = gost.SSHForwardTransporter()
-			}
 			ln, err = gost.TCPListener(node.Addr)
 		case "rtcp":
-			// Directly use SSH port forwarding if the last chain node is forward+ssh
-			if chain.LastNode().Protocol == "forward" && chain.LastNode().Transport == "ssh" {
-				chain.Nodes()[len(chain.Nodes())-1].Client.Connector = gost.SSHRemoteForwardConnector()
-				chain.Nodes()[len(chain.Nodes())-1].Client.Transporter = gost.SSHForwardTransporter()
-			}
 			ln, err = gost.TCPRemoteForwardListener(node.Addr, chain)
 		case "udp":
 			ln, err = gost.UDPDirectForwardListener(node.Addr, time.Duration(node.GetInt("ttl"))*time.Second)
 		case "rudp":
 			ln, err = gost.UDPRemoteForwardListener(node.Addr, chain, time.Duration(node.GetInt("ttl"))*time.Second)
-		case "ssu":
-			ln, err = gost.ShadowUDPListener(node.Addr, node.User, time.Duration(node.GetInt("ttl"))*time.Second)
-		case "obfs4":
-			if err = gost.Obfs4Init(node, true); err != nil {
-				return err
-			}
-			ln, err = gost.Obfs4Listener(node.Addr)
-		case "ohttp":
-			ln, err = gost.ObfsHTTPListener(node.Addr)
 		default:
 			ln, err = gost.TCPListener(node.Addr)
 		}
@@ -443,14 +327,10 @@ func (r *route) serve() error {
 
 		var handler gost.Handler
 		switch node.Protocol {
-		case "http2":
-			handler = gost.HTTP2Handler()
 		case "socks", "socks5":
 			handler = gost.SOCKS5Handler()
 		case "socks4", "socks4a":
 			handler = gost.SOCKS4Handler()
-		case "ss":
-			handler = gost.ShadowHandler()
 		case "http":
 			handler = gost.HTTPHandler()
 		case "tcp":
@@ -461,14 +341,8 @@ func (r *route) serve() error {
 			handler = gost.UDPDirectForwardHandler(node.Remote)
 		case "rudp":
 			handler = gost.UDPRemoteForwardHandler(node.Remote)
-		case "forward":
-			handler = gost.SSHForwardHandler()
 		case "redirect":
 			handler = gost.TCPRedirectHandler()
-		case "ssu":
-			handler = gost.ShadowUDPdHandler()
-		case "sni":
-			handler = gost.SNIHandler()
 		default:
 			// start from 2.5, if remote is not empty, then we assume that it is a forward tunnel.
 			if node.Remote != "" {
@@ -502,7 +376,6 @@ func (r *route) serve() error {
 			gost.AddrHandlerOption(node.Addr),
 			gost.ChainHandlerOption(chain),
 			gost.UsersHandlerOption(users...),
-			gost.TLSConfigHandlerOption(tlsCfg),
 			gost.WhitelistHandlerOption(whitelist),
 			gost.BlacklistHandlerOption(blacklist),
 			gost.BypassHandlerOption(parseBypass(node.Get("bypass"))),
