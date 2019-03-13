@@ -141,10 +141,10 @@ func (tr *quicTransporter) initSession(addr string, conn net.Conn, config *QUICC
 		HandshakeTimeout: config.Timeout,
 		KeepAlive:        config.KeepAlive,
 		IdleTimeout:      config.IdleTimeout,
-		Versions: []quic.VersionNumber{
-			quic.VersionGQUIC43,
-			quic.VersionGQUIC39,
-		},
+		// Versions: []quic.VersionNumber{
+		// 	quic.VersionGQUIC43,
+		// 	quic.VersionGQUIC39,
+		// },
 	}
 	session, err := quic.Dial(udpConn, udpAddr, addr, config.TLSConfig, quicConfig)
 	if err != nil {
