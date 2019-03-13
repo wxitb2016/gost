@@ -327,7 +327,7 @@ func (c *socks5BindConnector) ConnectContext(ctx context.Context, conn net.Conn,
 
 	laddr, err := net.ResolveTCPAddr("tcp", address)
 	if err != nil {
-		log.Log(err)
+		glog.Info(err)
 		return nil, err
 	}
 
@@ -342,7 +342,7 @@ func (c *socks5BindConnector) ConnectContext(ctx context.Context, conn net.Conn,
 	}
 
 	if Debug {
-		log.Log("[socks5] bind\n", req)
+		glog.Info("[socks5] bind\n", req)
 	}
 
 	reply, err := gosocks5.ReadReply(conn)
@@ -351,7 +351,7 @@ func (c *socks5BindConnector) ConnectContext(ctx context.Context, conn net.Conn,
 	}
 
 	if Debug {
-		log.Log("[socks5] bind\n", reply)
+		glog.Info("[socks5] bind\n", reply)
 	}
 
 	if reply.Rep != gosocks5.Succeeded {
@@ -502,7 +502,7 @@ func (tr *socks5MuxBindTransporter) initSession(conn net.Conn, addr string, opts
 	}
 
 	if Debug {
-		log.Log("[socks5] mbind\n", req)
+		glog.Info("[socks5] mbind\n", req)
 	}
 
 	reply, err := gosocks5.ReadReply(conn)
@@ -511,7 +511,7 @@ func (tr *socks5MuxBindTransporter) initSession(conn net.Conn, addr string, opts
 	}
 
 	if Debug {
-		log.Log("[socks5] mbind\n", reply)
+		glog.Info("[socks5] mbind\n", reply)
 	}
 
 	if reply.Rep != gosocks5.Succeeded {
@@ -597,7 +597,7 @@ func (c *socks5UDPConnector) ConnectContext(ctx context.Context, conn net.Conn, 
 	}
 
 	if Debug {
-		log.Log("[socks5] udp\n", req)
+		glog.Info("[socks5] udp\n", req)
 	}
 
 	reply, err := gosocks5.ReadReply(conn)
@@ -606,7 +606,7 @@ func (c *socks5UDPConnector) ConnectContext(ctx context.Context, conn net.Conn, 
 	}
 
 	if Debug {
-		log.Log("[socks5] udp\n", reply)
+		glog.Info("[socks5] udp\n", reply)
 	}
 
 	if reply.Rep != gosocks5.Succeeded {
@@ -937,7 +937,7 @@ func (h *socks5Handler) handleConnect(conn net.Conn, req *gosocks5.Request) {
 			fmt.Fprintf(&buf, "%d@%s -> ", nd.ID, nd.String())
 		}
 		fmt.Fprintf(&buf, "%s", host)
-		log.Log("[route]", buf.String())
+		glog.Info("[route]", buf.String())
 
 		cc, err = route.Dial(host,
 			TimeoutChainOption(h.options.Timeout),
@@ -1715,7 +1715,7 @@ func (h *socks4Handler) handleConnect(conn net.Conn, req *gosocks4.Request) {
 		return
 	}
 	if h.options.Bypass.Contains(addr) {
-		log.Log("[socks4] %s - %s : Bypass %s",
+		glog.Info("[socks4] %s - %s : Bypass %s",
 			conn.RemoteAddr(), conn.LocalAddr(), addr)
 		rep := gosocks4.NewReply(gosocks4.Rejected, nil)
 		rep.Write(conn)
@@ -1752,7 +1752,7 @@ func (h *socks4Handler) handleConnect(conn net.Conn, req *gosocks4.Request) {
 			fmt.Fprintf(&buf, "%d@%s -> ", nd.ID, nd.String())
 		}
 		fmt.Fprintf(&buf, "%s", addr)
-		log.Log("[route]", buf.String())
+		glog.Info("[route]", buf.String())
 
 		cc, err = route.Dial(addr,
 			TimeoutChainOption(h.options.Timeout),

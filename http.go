@@ -248,7 +248,7 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 			fmt.Fprintf(&buf, "%d@%s -> ", nd.ID, nd.String())
 		}
 		fmt.Fprintf(&buf, "%s", host)
-		log.Log("[route]", buf.String())
+		glog.Info("[route]", buf.String())
 
 		// forward http request
 		lastNode := route.LastNode()
