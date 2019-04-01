@@ -49,10 +49,12 @@ func TCPListener(addr string) (Listener, error) {
 	}
 	// Set QUIC_CONNID_PORT if not set
 	if _, ok := os.LookupEnv("QUIC_CONNID_PORT"); !ok {
-		err = os.Setenv("QUIC_CONNID_PORT", strconv.Itoa(laddr.Port))
-		glog.Infof("Setting QUIC_CONNID_PORT to %v", laddr.Port)
-		if err != nil {
-			return nil, err
+		if _, ok2 := os.LookupEnv("GOST_ENABLE_QUIC_CONNID"); ok2 {
+			err = os.Setenv("QUIC_CONNID_PORT", strconv.Itoa(laddr.Port))
+			glog.Infof("Setting QUIC_CONNID_PORT to %v", laddr.Port)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	ln, err := net.ListenTCP("tcp", laddr)
