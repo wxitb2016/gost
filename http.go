@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/phuslu/glog"
@@ -22,10 +21,6 @@ import (
 type httpConnector struct {
 	User *url.Userinfo
 }
-
-var ddlCounter int = 0
-var ddlMutex sync.Mutex
-const kMaxDDLError = 5
 
 // HTTPConnector creates a Connector for HTTP proxy client.
 // It accepts an optional auth info for HTTP Basic Authentication.
@@ -272,20 +267,9 @@ func (h *httpHandler) handleRequest(conn net.Conn, req *http.Request) {
 			ResolverChainOption(h.options.Resolver),
 		)
 		if err == nil {
-			ddlMutex.Lock()
-			ddlCounter = 0
-			ddlMutex.Unlock()
 			break
 		}
 		glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
-		if strings.Contains(err.Error(), "deadline exceeded") {
-			ddlMutex.Lock()
-			defer ddlMutex.Unlock()
-			ddlCounter++
-			if ddlCounter > kMaxDDLError {
-				glog.Infof("max error reached, going to reset connection!")
-			}
-		}
 	}
 
 	if err != nil {
