@@ -15,6 +15,8 @@ import (
 	quic "github.com/lucas-clemente/quic-go"
 )
 
+var kStatelessResetKey = []byte("&&**reset[[]]")
+
 type quicSession struct {
 	conn    net.Conn
 	session quic.Session
@@ -141,6 +143,7 @@ func (tr *quicTransporter) initSession(addr string, conn net.Conn, config *QUICC
 		HandshakeTimeout: config.Timeout,
 		KeepAlive:        config.KeepAlive,
 		IdleTimeout:      config.IdleTimeout,
+		StatelessResetKey: kStatelessResetKey,
 		// Versions: []quic.VersionNumber{
 		// 	quic.VersionGQUIC43,
 		// 	quic.VersionGQUIC39,
@@ -182,6 +185,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 		HandshakeTimeout: config.Timeout,
 		KeepAlive:        config.KeepAlive,
 		IdleTimeout:      config.IdleTimeout,
+		StatelessResetKey: kStatelessResetKey,
 	}
 
 	tlsConfig := config.TLSConfig
