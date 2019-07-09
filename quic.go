@@ -1,6 +1,7 @@
 package gost
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -15,6 +16,8 @@ import (
 	quic "github.com/lucas-clemente/quic-go"
 )
 
+var kNextProtos = []string{"gost"}
+
 var kStatelessResetKey = []byte("&&**reset[[]]")
 
 type quicSession struct {
@@ -23,7 +26,7 @@ type quicSession struct {
 }
 
 func (session *quicSession) GetConn() (*quicConn, error) {
-	stream, err := session.session.OpenStreamSync()
+	stream, err := session.session.OpenStreamSync(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +97,7 @@ func (tr *quicTransporter) Handshake(conn net.Conn, options ...HandshakeOption) 
 	if config.TLSConfig == nil {
 		config.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
+	config.TLSConfig.NextProtos = kNextProtos
 
 	tr.sessionMutex.Lock()
 	defer tr.sessionMutex.Unlock()
@@ -192,6 +196,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	if tlsConfig == nil {
 		tlsConfig = DefaultTLSConfig
 	}
+	tlsConfig.NextProtos = kNextProtos
 
 	var conn net.PacketConn
 
@@ -226,7 +231,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 
 func (l *quicListener) listenLoop() {
 	for {
-		session, err := l.ln.Accept()
+		session, err := l.ln.Accept(context.Background())
 		if err != nil {
 			glog.Info("[quic] accept:", err)
 			l.errChan <- err
@@ -242,7 +247,7 @@ func (l *quicListener) sessionLoop(session quic.Session) {
 	defer glog.Infof("[quic] %s >-< %s", session.RemoteAddr(), session.LocalAddr())
 
 	for {
-		stream, err := session.AcceptStream()
+		stream, err := session.AcceptStream(context.Background())
 		if err != nil {
 			glog.Info("[quic] accept stream:", err)
 			session.Close()
