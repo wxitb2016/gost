@@ -25,6 +25,7 @@ require (
 	github.com/miekg/dns v1.1.3
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
+	github.com/phuslu/glog v0.0.0-20180604132819-1b0e5eb374b3
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/ryanuber/go-glob v0.0.0-20170128012129-256dc444b735
 	github.com/shadowsocks/go-shadowsocks2 v0.0.11
