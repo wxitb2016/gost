@@ -42,6 +42,8 @@ github.com/klauspost/cpuid v1.2.0 h1:NMpwD2G9JSFOE1/TJjGSo5zG7Yb2bTe7eq1jH+irmeE
 github.com/klauspost/cpuid v1.2.0/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
 github.com/klauspost/reedsolomon v1.7.0 h1:pLFmRKGko2ZieiTGyo9DahLCIuljyxm+Zzhz/fYEonE=
 github.com/klauspost/reedsolomon v1.7.0/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=
+github.com/lins05/glog v0.0.0-20180329065208-4b16b19a505d h1:P59aiOOQ9R+nJkC0ntNUREx8yYQcsYFislJNakikmj8=
+github.com/lins05/glog v0.0.0-20180329065208-4b16b19a505d/go.mod h1:FW9eTx1NBdRpzaPh+etc6cRahde30wm2jCW92OZx9Nk=
 github.com/marten-seemann/qpack v0.1.0/go.mod h1:LFt1NU/Ptjip0C2CPkhimBz5CGE3WGDAUWqna+CNTrI=
 github.com/marten-seemann/qtls v0.3.1 h1:ySYIvhFjFY2JsNHY6VACvomMEDy3EvdPA6yciUFAiHw=
 github.com/marten-seemann/qtls v0.3.1/go.mod h1:xzjG7avBwGGbdZ8dTGxlBnLArsVKLvwmjgmPuiQEcYk=
