@@ -33,4 +33,7 @@ require (
 	gopkg.in/xtaci/smux.v1 v1.0.7
 )
 
-replace github.com/lucas-clemente/quic-go => /data/github/tools/quic-go
+replace (
+	github.com/lucas-clemente/quic-go => /data/github/tools/quic-go
+	github.com/phuslu/glog => github.com/lins05/glog v0.0.0-20180329065208-4b16b19a505d
+)
