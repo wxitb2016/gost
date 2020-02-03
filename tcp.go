@@ -3,6 +3,8 @@ package gost
 import (
 	"net"
 	"os"
+	"strconv"
+	"github.com/phuslu/glog"
 )
 
 // tcpTransporter is a raw TCP transporter.

@@ -3,11 +3,9 @@ package gost
 import (
 	"io"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/go-log/log"
-	"github.com/phuslu/glog"
 )
 
 // Accepter represents a network endpoint that can accept connection from peer.

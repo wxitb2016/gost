@@ -419,7 +419,7 @@ func (h *httpHandler) forwardRequest(conn net.Conn, req *http.Request, route *Ch
 			}
 			err := req.WriteProxy(cc)
 			if err != nil {
-				log.Logf("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
+				glog.Infof("[http] %s -> %s : %s", conn.RemoteAddr(), conn.LocalAddr(), err)
 				errc <- err
 				return
 			}
@@ -433,7 +433,7 @@ func (h *httpHandler) forwardRequest(conn net.Conn, req *http.Request, route *Ch
 
 			if Debug {
 				dump, _ := httputil.DumpRequest(req, false)
-				log.Logf("[http] %s -> %s\n%s",
+				glog.Infof("[http] %s -> %s\n%s",
 					conn.RemoteAddr(), conn.LocalAddr(), string(dump))
 			}
 		}
@@ -441,7 +441,7 @@ func (h *httpHandler) forwardRequest(conn net.Conn, req *http.Request, route *Ch
 
 	glog.Infof("[http] %s <-> %s", conn.RemoteAddr(), host)
 	<-errc
-	glong.Infof("[http] %s >-< %s", conn.RemoteAddr(), host)
+	glog.Infof("[http] %s >-< %s", conn.RemoteAddr(), host)
 
 	return nil
 }

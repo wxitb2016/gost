@@ -48,7 +48,7 @@ type clientSelector struct {
 
 func (selector *clientSelector) Methods() []uint8 {
 	if Debug {
-		log.Log("[socks5] methods:", selector.methods)
+		glog.Info("[socks5] methods:", selector.methods)
 	}
 	return selector.methods
 }
@@ -63,7 +63,7 @@ func (selector *clientSelector) Select(methods ...uint8) (method uint8) {
 
 func (selector *clientSelector) OnSelected(method uint8, conn net.Conn) (net.Conn, error) {
 	if Debug {
-		log.Log("[socks5] method selected:", method)
+		glog.Info("[socks5] method selected:", method)
 	}
 	switch method {
 	case MethodTLS:
