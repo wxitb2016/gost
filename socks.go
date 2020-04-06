@@ -15,6 +15,7 @@ import (
 
 	"github.com/ginuerzh/gosocks4"
 	"github.com/ginuerzh/gosocks5"
+	"github.com/go-log/log"
 	"github.com/phuslu/glog"
 	smux "gopkg.in/xtaci/smux.v1"
 )

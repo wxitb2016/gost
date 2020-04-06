@@ -38,7 +38,7 @@ func (session *quicSession) GetConn() (*quicConn, error) {
 }
 
 func (session *quicSession) Close() error {
-	return session.session.Close()
+	return session.session.CloseWithError(16, "foobar")
 }
 
 type quicTransporter struct {
@@ -146,7 +146,7 @@ func (tr *quicTransporter) initSession(addr string, conn net.Conn, config *QUICC
 	quicConfig := &quic.Config{
 		HandshakeTimeout: config.Timeout,
 		KeepAlive:        config.KeepAlive,
-		IdleTimeout:      config.IdleTimeout,
+		MaxIdleTimeout:	  config.IdleTimeout,
 		StatelessResetKey: kStatelessResetKey,
 		// Versions: []quic.VersionNumber{
 		// 	quic.VersionGQUIC43,
@@ -188,7 +188,7 @@ func QUICListener(addr string, config *QUICConfig) (Listener, error) {
 	quicConfig := &quic.Config{
 		HandshakeTimeout: config.Timeout,
 		KeepAlive:        config.KeepAlive,
-		IdleTimeout:      config.IdleTimeout,
+		MaxIdleTimeout:	  config.IdleTimeout,
 		StatelessResetKey: kStatelessResetKey,
 	}
 
@@ -250,7 +250,7 @@ func (l *quicListener) sessionLoop(session quic.Session) {
 		stream, err := session.AcceptStream(context.Background())
 		if err != nil {
 			glog.Info("[quic] accept stream:", err)
-			session.Close()
+			session.CloseWithError(123, "error accept stream")
 			return
 		}
 
